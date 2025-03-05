@@ -1,15 +1,41 @@
-import { useState } from "react";
-import { EntityProvider, ReplykeProvider } from "@replyke/react-js";
+import { useEffect, useState } from "react";
+import {
+  EntityProvider,
+  ReplykeProvider,
+  useSignTestingJwt,
+} from "@replyke/react-js";
 import { Toaster } from "@/components/ui/sonner";
-import { posts } from "./constants/dummy-data";
+import { posts, users } from "./constants/dummy-data";
 import { Button } from "./components/ui/button";
 import DiscussionSheet from "./components/DiscussionSheet";
 
+const PROJECT_ID = import.meta.env.VITE_PUBLIC_REPLYKE_PROJECT_ID;
+const PRIVATE_KEY = import.meta.env.VITE_PUBLIC_REPLYKE_SECRET_KEY;
+
 function App() {
+  const signTestingJwt = useSignTestingJwt();
+
   const [selectedPostId, setSelectdPostId] = useState<string | null>(null);
+  const [signedToken, setSignedToken] = useState<string>();
+
+  useEffect(() => {
+    const handleSignJwt = async () => {
+      const payload = users[0];
+
+      const token = await signTestingJwt({
+        projectId: PROJECT_ID,
+        payload,
+        privateKey: PRIVATE_KEY,
+      });
+      // Set the signed JWT in the state
+      setSignedToken(token);
+    };
+
+    handleSignJwt();
+  }, []);
 
   return (
-    <ReplykeProvider projectId={import.meta.env.VITE_PUBLIC_REPLYKE_PROJECT_ID}>
+    <ReplykeProvider projectId={PROJECT_ID} signedToken={signedToken}>
       <Toaster />
       <EntityProvider referenceId={selectedPostId} createIfNotFound>
         <DiscussionSheet
